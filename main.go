@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -33,13 +35,17 @@ type RenderContext struct {
 }
 
 func main() {
-	if len(os.Args) == 1 {
+	forceOverwrite := flag.Bool("f", false, "overwrite output files without prompting")
+	flag.Parse()
+	args := flag.Args()
+
+	if len(args) == 0 {
 		input, err := io.ReadAll(os.Stdin)
 		if err != nil {
 			fatal("failed to read stdin", err)
 		}
 		if len(strings.TrimSpace(string(input))) == 0 {
-			fatal("stdin is empty", nil)
+			return
 		}
 		output, err := renderBoxNote(input)
 		if err != nil {
@@ -49,26 +55,17 @@ func main() {
 		return
 	}
 
-	for _, inputPath := range os.Args[1:] {
-		input, err := os.ReadFile(inputPath)
-		if err != nil {
-			fatal(fmt.Sprintf("failed to read %s", inputPath), err)
+	hadError := false
+	for _, inputPath := range args {
+		if err := processFile(inputPath, *forceOverwrite); err != nil {
+			fmt.Fprintf(os.Stderr, "ERROR: %s: %v\n", inputPath, err)
+			hadError = true
+			continue
 		}
-		if len(strings.TrimSpace(string(input))) == 0 {
-			fatal(fmt.Sprintf("%s is empty", inputPath), nil)
-		}
-		output, err := renderBoxNote(input)
-		if err != nil {
-			fatal(fmt.Sprintf("%s: %s", inputPath, err.Error()), nil)
-		}
-		title := titleFromPath(inputPath)
-		if title != "" {
-			output = "# " + title + "\n\n" + output
-		}
-		outputPath := outputPathFor(inputPath)
-		if err := os.WriteFile(outputPath, []byte(output), 0644); err != nil {
-			fatal(fmt.Sprintf("failed to write %s", outputPath), err)
-		}
+		fmt.Fprintf(os.Stderr, "OK: %s\n", inputPath)
+	}
+	if hadError {
+		os.Exit(1)
 	}
 }
 
@@ -90,6 +87,59 @@ func renderBoxNote(input []byte) (string, error) {
 		return "", fmt.Errorf("missing doc node")
 	}
 	return renderNode(note.Doc, RenderContext{}), nil
+}
+
+func processFile(inputPath string, forceOverwrite bool) error {
+	input, err := os.ReadFile(inputPath)
+	if err != nil {
+		return fmt.Errorf("failed to read: %w", err)
+	}
+
+	outputPath := outputPathFor(inputPath)
+	if exists(outputPath) && !forceOverwrite {
+		confirmed, err := confirmOverwrite(outputPath)
+		if err != nil {
+			return err
+		}
+		if !confirmed {
+			return fmt.Errorf("overwrite declined")
+		}
+	}
+
+	if len(strings.TrimSpace(string(input))) == 0 {
+		return os.WriteFile(outputPath, []byte(""), 0644)
+	}
+
+	output, err := renderBoxNote(input)
+	if err != nil {
+		return err
+	}
+
+	title := titleFromPath(inputPath)
+	if title != "" {
+		output = "# " + title + "\n\n" + output
+	}
+
+	if err := os.WriteFile(outputPath, []byte(output), 0644); err != nil {
+		return fmt.Errorf("failed to write: %w", err)
+	}
+	return nil
+}
+
+func exists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}
+
+func confirmOverwrite(path string) (bool, error) {
+	fmt.Fprintf(os.Stderr, "overwrite %s? [y/N]: ", path)
+	reader := bufio.NewReader(os.Stdin)
+	line, err := reader.ReadString('\n')
+	if err != nil && err != io.EOF {
+		return false, fmt.Errorf("failed to read overwrite confirmation: %w", err)
+	}
+	answer := strings.TrimSpace(strings.ToLower(line))
+	return answer == "y" || answer == "yes", nil
 }
 
 func outputPathFor(inputPath string) string {

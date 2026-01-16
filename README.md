@@ -9,10 +9,6 @@ Convert Box Notes JSON files into GitHub Flavored Markdown (GFM) using a custom 
 - Supports headings, lists, task lists, blockquotes, tables, and inline marks.
 - CLI works with stdin/stdout or file arguments.
 
-## Requirements
-
-- Go 1.20+ (module mode)
-
 ## Install
 
 ### Homebrew
@@ -28,6 +24,8 @@ Download the appropriate archive for your OS/arch from GitHub Releases and place
 
 ### From Source
 
+Requirements: Go 1.20+ (module mode)
+
 ```bash
 go build -o boxnotes2md .
 ```
@@ -40,6 +38,8 @@ go build -o boxnotes2md .
 cat examples/example.boxnote | boxnotes2md
 ```
 
+If stdin is empty (only whitespace), the command exits successfully without output.
+
 ### Files to Markdown outputs
 
 ```bash
@@ -51,6 +51,33 @@ When file arguments are provided, an output file is written next to each input:
 - `examples/example.boxnote` -> `examples/example.md`
 
 The rendered Markdown is prefixed with an H1 title derived from the input filename (without `.boxnote`).
+
+### Multiple files
+
+```bash
+boxnotes2md examples/example.boxnote examples/another.boxnote
+```
+
+Each file is processed independently. Progress and errors are written to stderr:
+
+- `OK: <path>` on success.
+- `ERROR: <path>: <message>` on failure.
+
+The command exits with status 0 when all files succeed, or 1 if any file fails.
+
+### Overwrite behavior
+
+If the output file already exists, the CLI prompts before overwriting:
+
+```
+overwrite examples/example.md? [y/N]:
+```
+
+Use `-f` to force overwrite without prompting.
+
+```bash
+boxnotes2md -f examples/example.boxnote
+```
 
 ## Input Format
 

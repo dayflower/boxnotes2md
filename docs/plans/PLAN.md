@@ -7,6 +7,11 @@ Convert Box Notes JSON files to Markdown using a custom ProseMirror JSON-to-Mark
 - Input: Box Notes JSON file (see `examples/example.boxnote`).
 - ProseMirror content is under `root.doc` in the Box Notes JSON.
 - Exclude mark types from Markdown conversion: `author_id`, `font_size`, `font_color`.
+- Empty input files should not be treated as errors; they should produce empty output files.
+- When multiple file arguments are provided, processing should continue even if some files fail.
+- For multi-file runs, report per-file completion and per-file errors to stderr.
+- Exit code should be 0 if all files succeed, or 1 if any file fails.
+- If output file already exists, prompt for overwrite unless `-f` is provided.
 - No tests are required.
 
 ## Observed ProseMirror Types in the Example
@@ -93,6 +98,8 @@ None.
 2. Define Go structures mirroring the subset of ProseMirror nodes/marks needed for the example(s).
 3. Implement a Markdown renderer that walks the ProseMirror JSON tree and emits Markdown.
 4. Provide a CLI entry point that reads a `.boxnotes` file and outputs Markdown to stdout or a file.
+5. Add multi-file processing with per-file status reporting and aggregate exit status.
+6. Add overwrite confirmation behavior with a `-f` flag to force overwrite.
 
 ## Detailed Steps
 1. **Explore the example input**
@@ -121,7 +128,12 @@ None.
    - For each input file, read JSON, render Markdown, and write to a new file.
    - Output file naming: if input ends with `.boxnote`, remove it, then append `.md`; otherwise append `.md` directly.
    - When processing files via arguments, prepend an H1 header using the input filename (with `.boxnote` removed) before the rendered content.
-   - Return non-zero exit code on parse/render errors with a clear message (include the failing filename).
+   - If the input file is empty, generate an empty output file without error.
+   - When multiple file arguments are provided, continue processing after errors.
+   - For multi-file runs, write per-file completion to stderr, and write errors to stderr with filename context.
+   - Track whether any file failed; exit with status 1 if any failures occurred, otherwise exit 0.
+   - If the output file already exists, prompt for overwrite confirmation.
+   - Add a `-f` flag to force overwrite without prompting.
 
 6. **Usage documentation**
    - Update `README.md` with examples for stdin/stdout and file-argument usage.
