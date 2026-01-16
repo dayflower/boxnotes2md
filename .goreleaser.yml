@@ -1,0 +1,52 @@
+version: 2
+
+project_name: boxnotes2md
+
+builds:
+  - id: boxnotes2md
+    binary: boxnotes2md
+    main: .
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - ids:
+      - boxnotes2md
+    formats: ["tar.gz"]
+    format_overrides:
+      - goos: windows
+        formats: ["zip"]
+    name_template: >-
+      {{- .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end -}}
+
+checksum:
+  name_template: "checksums.txt"
+
+release:
+  github:
+    owner: dayflower
+    name: boxnotes2md
+
+homebrew_casks:
+  - name: boxnotes2md
+    repository:
+      owner: dayflower
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: "https://github.com/dayflower/boxnotes2md"
+    description: "Convert Box Notes JSON files into GitHub Flavored Markdown."
+    license: "MIT"
+    binaries:
+      - boxnotes2md

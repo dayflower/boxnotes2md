@@ -1,0 +1,27 @@
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go workspace
+/go.work
+/go.work.sum
+
+# Build outputs
+/bin/
+/dist/
+
+# Coverage
+cover.out
+coverage.out
+coverage.html
+
+# Generated markdown from examples
+/examples/*.md
+
+# OS files
+.DS_Store
