@@ -39,7 +39,7 @@ release:
     owner: dayflower
     name: boxnotes2md
 
-homebrew_casks:
+brews:
   - name: boxnotes2md
     repository:
       owner: dayflower
@@ -48,5 +48,5 @@ homebrew_casks:
     homepage: "https://github.com/dayflower/boxnotes2md"
     description: "Convert Box Notes JSON files into GitHub Flavored Markdown."
     license: "MIT"
-    binaries:
-      - boxnotes2md
+    install: |
+      bin.install "boxnotes2md"
