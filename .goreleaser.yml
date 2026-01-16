@@ -45,6 +45,7 @@ brews:
       owner: dayflower
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
     homepage: "https://github.com/dayflower/boxnotes2md"
     description: "Convert Box Notes JSON files into GitHub Flavored Markdown."
     license: "MIT"
