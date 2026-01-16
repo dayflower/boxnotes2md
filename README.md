@@ -15,6 +15,19 @@ Convert Box Notes JSON files into GitHub Flavored Markdown (GFM) using a custom 
 
 ## Install
 
+### Homebrew
+
+```bash
+brew install dayflower/tap/boxnotes2md
+```
+
+### From GitHub Releases
+
+Download the appropriate archive for your OS/arch from GitHub Releases and place the
+`boxnotes2md` binary in your `PATH`.
+
+### From Source
+
 ```bash
 go build -o boxnotes2md .
 ```
@@ -24,13 +37,13 @@ go build -o boxnotes2md .
 ### Stdin to stdout
 
 ```bash
-cat examples/example.boxnote | go run .
+cat examples/example.boxnote | boxnotes2md
 ```
 
 ### Files to Markdown outputs
 
 ```bash
-go run . examples/example.boxnote
+boxnotes2md examples/example.boxnote
 ```
 
 When file arguments are provided, an output file is written next to each input:
